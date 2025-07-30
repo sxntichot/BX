@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+<html lang="th">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>9boatX</title>
+
+
+
+  <!-- ฟอนต์ Hacker (อังกฤษ) และ ไทย -->
+
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Mali&display=swap" rel="stylesheet" />
+
+
+
+  <style>
+
+    body {
+
+      margin: 0;
+
+      font-family: 'Share Tech Mono','Mali', monospace;
+
+      background: linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);
+
+      color: #f5f5f5;
+
+      overflow-x: hidden;
+
+      animation: bgShift 10s infinite alternate;
+
+      position: relative;
+
+    }
+
+    @keyframes bgShift {0%{background-position:0 0;}100%{background-position:100% 100%;}}
+
+
+
+    header {
+
+      background:#111; padding:20px; text-align:center; border-bottom:1px solid #00ffcc;
+
+      position:sticky; top:0; z-index:1000;
+
+    }
+
+    header h1 {
+
+      margin:0; font-size:2em; color:#00ffcc;
+
+      text-shadow:0 0 10px #00ffcc;
+
+      animation:flicker 2s infinite alternate;
+
+    }
+
+    header input {
+
+      margin-top:10px; padding:10px; width:80%; max-width:400px;
+
+      border:none; border-radius:5px;
+
+      font-size:1em; background:#222; color:#00ffcc;
+
+      outline:none; font-family:'Share Tech Mono','Mali';
+
+      border:1px solid #00ffcc;
+
+    }
+
+
+
+    @keyframes flicker {
+
+      0% {opacity:0.85;}
+
+      100% {opacity:1; text-shadow:0 0 20px #00ffcc;}
+
+    }
+
+
+
+    .container {
+
+      max-width:800px; margin:auto; padding:20px;
+
+    }
+
+    .card {
+
+      background:rgba(20,20,20,0.9);
+
+      border:1px solid #00ffcc;
+
+      border-radius:10px;
+
+      padding:20px;
+
+      margin:30px 0;
+
+      transition:transform .3s, box-shadow .3s;
+
+      animation:popIn .5s ease;
+
+      cursor:pointer;
+
+      position:relative;
+
+      overflow: hidden;
+
+    }
+
+    .card:hover {
+
+      transform:scale(1.02);
+
+      box-shadow:0 0 20px #00ffcc;
+
+    }
+
+
+
+    .card img {
+
+      width:100%;
+
+      border-radius:8px;
+
+      margin-top:15px;
+
+      transition:transform .3s,opacity .4s;
+
+    }
+
+    .card img:hover {
+
+      transform:scale(1.02);
+
+      opacity:0.95;
+
+    }
+
+
+
+    .title {
+
+      font-size:1.6em;
+
+      color:#00ffcc;
+
+      border-left:4px solid #00ffcc;
+
+      padding-left:10px;
+
+      margin-bottom:10px;
+
+      animation:typeIn 2s steps(25,end) forwards;
+
+      white-space:nowrap;
+
+      overflow:hidden;
+
+      width:0;
+
+    }
+
+    @keyframes typeIn {
+
+      from {width:0;}
+
+      to {width:100%;}
+
+    }
+
+
+
+    .desc {
+
+      color:#ccc;
+
+      font-size:1em;
+
+      line-height:1.6;
+
+      animation:fadeIn 1.2s ease 1s forwards;
+
+      opacity:0;
+
+    }
+
+    @keyframes fadeIn {
+
+      from {opacity:0;transform:translateY(10px);}
+
+      to {opacity:1;transform:translateY(0);}
+
+    }
+
+
+
+    @keyframes popIn {
+
+      0% {transform:scale(0.95);opacity:0;}
+
+      100% {transform:scale(1);opacity:1;}
+
+    }
+
+
+
+    .hidden {
+
+      display:none !important;
+
+    }
+
+
+
+    canvas {
+
+      position:fixed;
+
+      top:0;
+
+      left:0;
+
+      width:100%;
+
+      height:100%;
+
+      pointer-events:none;
+
+      z-index:10000;
+
+    }
+
+
+
+    /* ==== เอฟเฟกต์ตอนกดภาพ ==== */
+
+    @keyframes flashEffect {
+
+      0% {
+
+        opacity: 1;
+
+        transform: scale(0.8);
+
+      }
+
+      100% {
+
+        opacity: 0;
+
+        transform: scale(2);
+
+      }
+
+    }
+
+    @keyframes shakeScale {
+
+      0% {
+
+        transform: scale(1) translate(0, 0);
+
+      }
+
+      20% {
+
+        transform: scale(1.1) translate(-5px, 5px);
+
+      }
+
+      40% {
+
+        transform: scale(1.05) translate(5px, -5px);
+
+      }
+
+      60% {
+
+        transform: scale(1.1) translate(-5px, 5px);
+
+      }
+
+      80% {
+
+        transform: scale(1.05) translate(5px, -5px);
+
+      }
+
+      100% {
+
+        transform: scale(1.2) translate(0, 0);
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+
+  <header>
+
+    <h1>9boatX</h1>
+
+    <input type="text" id="search" placeholder="Search..."/>
+
+  </header>
+
+
+
+  <div class="container" id="gallery"></div>
+
+
+
+  <canvas id="effectCanvas"></canvas>
+
+
+
+  <script>
+
+    // ============== Particle Engine ==============
+
+    const canvas = document.getElementById("effectCanvas");
+
+    const ctx = canvas.getContext("2d");
+
+    let particles = [];
+
+
+
+    function resizeCanvas() {
+
+      canvas.width = window.innerWidth;
+
+      canvas.height = window.innerHeight;
+
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    resizeCanvas();
+
+
+
+    function random(min,max) { return Math.random()*(max-min)+min; }
+
+
+
+    class Particle {
+
+      constructor(x,y,color,shrinkRate,gravity,vx,vy) {
+
+        this.x = x; this.y = y; this.color = color;
+
+        this.alpha = 1;
+
+        this.size = random(2,4);
+
+        this.shrinkRate = shrinkRate;
+
+        this.gravity = gravity;
+
+        this.vx = vx; this.vy = vy;
+
+      }
+
+      update() {
+
+        this.x += this.vx;
+
+        this.y += this.vy;
+
+        this.vy += this.gravity;
+
+        this.size -= this.shrinkRate;
+
+        this.alpha -= 0.01;
+
+      }
+
+      draw() {
+
+        ctx.globalAlpha = this.alpha;
+
+        ctx.fillStyle = this.color;
+
+        ctx.beginPath();
+
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+
+        ctx.fill();
+
+      }
+
+    }
+
+
+
+    function render() {
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      particles.forEach((p,i)=> {
+
+        p.update();
+
+        if(p.alpha<=0||p.size<=0) particles.splice(i,1);
+
+        else p.draw();
+
+      });
+
+      requestAnimationFrame(render);
+
+    }
+
+    render();
+
+
+
+    function fireworks(x,y) {
+
+      const count = 40;
+
+      for(let i=0;i<count;i++){
+
+        const angle = random(0,Math.PI*2);
+
+        const speed = random(1,6);
+
+        const vx = Math.cos(angle)*speed;
+
+        const vy = Math.sin(angle)*speed;
+
+        const color = `hsl(200, 100%, ${random(85, 100)}%)`; // ขาว-ฟ้า
+
+        particles.push(new Particle(x,y,color,0.05,0.05,vx,vy));
+
+      }
+
+    }
+
+
+
+    // เอฟเฟกต์ไฟเย็นลอยตามเมาส์ สีขาวฟ้า
+
+    function coldTrail(x, y) {
+
+      const color = `hsl(200, 100%, ${random(85, 100)}%)`; // ขาว-ฟ้า
+
+      const vx = random(-0.3, 0.3);
+
+      const vy = random(-1.0, -0.5);
+
+      particles.push(new Particle(x, y, color, 0.015, 0, vx, vy));
+
+    }
+
+
+
+    // รองรับ click & touch
+
+    function pointerDown(e) {
+
+      const x = (e.clientX||e.touches[0].clientX);
+
+      const y = (e.clientY||e.touches[0].clientY);
+
+      fireworks(x,y);
+
+    }
+
+    function pointerMove(e) {
+
+      const x = (e.clientX||e.touches[0].clientX);
+
+      const y = (e.clientY||e.touches[0].clientY);
+
+      coldTrail(x,y);
+
+    }
+
+    window.addEventListener('mousedown', pointerDown);
+
+    window.addEventListener('touchstart', pointerDown);
+
+    window.addEventListener('mousemove', pointerMove);
+
+    window.addEventListener('touchmove', pointerMove);
+
+
+
+    // ============== Gallery + Search + Click Animation ==============
+
+    const gallery = document.getElementById("gallery");
+
+
+
+    function upd(link, thumbnail, showThumbnail, title, description) {
+
+      const card = document.createElement("div"); 
+
+      card.className = "card";
+
+
+
+      const h2 = document.createElement("div"); 
+
+      h2.className = "title"; 
+
+      h2.innerText = title; 
+
+      card.appendChild(h2);
+
+
+
+      const desc = document.createElement("div"); 
+
+      desc.className = "desc"; 
+
+      desc.innerText = description; 
+
+      card.appendChild(desc);
+
+
+
+      if(showThumbnail){
+
+        const img = document.createElement("img"); 
+
+        img.src = thumbnail; 
+
+        img.alt = title; 
+
+        card.appendChild(img);
+
+      }
+
+
+
+      card.setAttribute("data-title", title.toLowerCase());
+
+      card.setAttribute("data-desc", description.toLowerCase());
+
+
+
+      // คลิกอลังการ
+
+      card.onclick = e => {
+
+        e.stopPropagation();
+
+
+
+        // สร้าง overlay แสงระเบิด
+
+        const flash = document.createElement("div");
+
+        flash.style.position = "absolute";
+
+        flash.style.top = 0;
+
+        flash.style.left = 0;
+
+        flash.style.width = "100%";
+
+        flash.style.height = "100%";
+
+        flash.style.background = "radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 80%)";
+
+        flash.style.borderRadius = "10px";
+
+        flash.style.pointerEvents = "none";
+
+        flash.style.animation = "flashEffect 0.6s ease-out forwards";
+
+        card.appendChild(flash);
+
+
+
+        // เพิ่มอนิเมชัน shake + scale
+
+        card.style.animation = "shakeScale 0.6s ease forwards";
+
+
+
+        // รอจบอนิเมชันแล้วเปิดลิงก์
+
+        setTimeout(() => {
+
+          window.open(link, "_blank");
+
+          card.style.animation = "";
+
+          if(card.contains(flash)) card.removeChild(flash);
+
+        }, 600);
+
+      };
+
+
+
+      gallery.appendChild(card);
+
+    }
+
+
+
+ 
+
+upd("https://unsplash.com/photos/eOLpJytrbsQ","https://picsum.photos/id/237/800/400",true,"[001] Mod Naruto [แพทย์เก่า]","Click continue to link");
+
+
+
+
+
+upd("https://unsplash.com/photos/yC-Yzbqy7PY","https://i.ytimg.com/vi/zHhM7X5AkDc/hqdefault.jpg?sqp=-oaymwEnCNACELwBSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLBo4dQSL0gFlE6_ocVbLL82B-vFww",true,"[002] Mod Sasukea [แพทย์เก่า]","Click continue to link");
+
+
+
+
+
+upd("https://unsplash.com/photos/LNRyGwIJr5c","https://i.ytimg.com/vi/gISFs3iaCxQ/hqdefault.jpg?sqp=-oaymwEnCNACELwBSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLAR7vqXpoEHfV8ueQ8AMcbbi-gzSA",true,"[003] Mod Ruok [แพทย์เก่า]","Click continue to link");
+
+
+
+    // ค้นหา
+
+    document.getElementById("search").addEventListener("input", e=>{
+
+      const kw = e.target.value.toLowerCase().trim();
+
+      document.querySelectorAll(".card").forEach(c=>{
+
+        const t = c.getAttribute("data-title"), d = c.getAttribute("data-desc");
+
+        c.classList.toggle("hidden", !(t.includes(kw)||d.includes(kw)));
+
+      });
+
+    });
+
+  </script>
+
+</body>
+
+</html>
+
